@@ -1,4 +1,4 @@
-FROM open jdk:21
+FROM openjdk:21-jdk-alpine
 WORKDIR /jiffy-meals-backend-microservice-app
 COPY jiffy-meals-backend-microservice /jiffy-meals-backend-microservice-app
 EXPOSE 8080
