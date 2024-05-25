@@ -8,21 +8,21 @@ spring:
       discovery:
         locator:
           enabled: true
-      mvc:
-        routes:
-          - id: identity-service
-            uri: lb://identity-service
-            predicates:
-              - Path=/identityserv/**
-            filters:
-              - RewritePath=/identityserv/(?<path>.*), /$\{path}
-          - id: order-service
-            uri: lb://order-service
-            predicates:
-              - Path=/orderserv/**
-            filters:
-              - RewritePath=/orderserv/(?<path>.*), /$\{path}
-#management:
+      routes:
+        - id: identity-service
+          uri: lb://identity-service
+          predicates:
+            - Path=/identityserv/**
+          filters:
+            - RewritePath=/identityserv/(?<path>.*), /$\{path}
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/orderserv/**
+          filters:
+            - RewritePath=/orderserv/(?<path>.*), /$\{path}
+
+    #management:
 #  endpoint:
 #    gateway:
 #      enabled: true
