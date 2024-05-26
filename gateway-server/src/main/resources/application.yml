@@ -21,7 +21,30 @@ spring:
             - Path=/orderserv/**
           filters:
             - RewritePath=/orderserv/(?<path>.*), /$\{path}
-
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/paymentserv/**
+          filters:
+            - RewritePath=/paymentserv/(?<path>.*), /$\{path}
+        - id: resturant-service
+          uri: lb://resturant-service
+          predicates:
+            - Path=/resturantserv/**
+          filters:
+            - RewritePath=/resturantserv/(?<path>.*), /$\{path}
+        - id: stock-service
+          uri: lb://stock-service
+          predicates:
+            - Path=/stockserv/**
+          filters:
+            - RewritePath=/stockserv/(?<path>.*), /$\{path}
+        - id: utility-service
+          uri: lb://utility-service
+          predicates:
+            - Path=/utilityserv/**
+          filters:
+            - RewritePath=/utilityserv/(?<path>.*), /$\{path}
     #management:
 #  endpoint:
 #    gateway:
