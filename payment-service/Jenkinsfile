@@ -24,6 +24,18 @@ pipeline {
                 }
             }
         }
+        stage('Code Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv('sonarsql') {
+                        echo "Running SonarQube analysis"
+                        dir('payment-service') {
+                            sh 'mvn install sonar:sonar' // Ensure SonarQube analysis is properly configured
+                        }
+                    }
+                }
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 script {
@@ -49,4 +61,3 @@ pipeline {
         }
     }
 }
-
