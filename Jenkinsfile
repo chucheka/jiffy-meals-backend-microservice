@@ -4,7 +4,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo "Checking out code"
-                git branch: 'develop', url: 'https://github.com/chucheka/jiffy-meals-backend-microservice.git'
+                git branch: 'cicd', url: 'https://github.com/chucheka/jiffy-meals-backend-microservice.git'
                 script {
                     echo "Current working directory: ${pwd()}"
                 }
