@@ -40,7 +40,7 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image"
-                    dir('/var/lib/jenkins/workspace/micro/config-server') {
+                    dir('/var/lib/jenkins/workspace/micro@2/config-server') {
                       sh 'docker build -t ujusophy/config-server .'
                     }
                 }
