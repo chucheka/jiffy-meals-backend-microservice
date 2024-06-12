@@ -46,7 +46,7 @@ pipeline {
                         switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
                                 sh 'cd payment-service && mvn clean package'
-                                sh 'ls -l target'
+                                sh 'cd payment-service && ls -l target'
                                 break
                             case 'staging':
                                 sh 'cd payment-service && mvn clean package'
