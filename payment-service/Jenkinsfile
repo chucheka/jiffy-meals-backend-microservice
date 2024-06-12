@@ -85,14 +85,21 @@ pipeline {
                             case 'develop':
                                 echo "Building Docker image"
                                 sh 'cd payment-service && docker build -t ujusophy/payment-service .'
-                                sh "docker login -u ujusophy -p ${dockerhubpwd}"
-                                sh "docker push ujusophy/payment-service"
+                                withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
+                                    sh "docker login -u ujusophy -p ${dockerhubpwd}"
+                                    echo "Tagging and pushing Docker image"
+                                    sh "docker push ujusophy/payment-service"
+                                }
                                 echo "Image Published successfully"
+                                break // Add break to ensure correct flow
                             case 'staging':
                                 echo "Building Docker image"
                                 sh 'cd payment-service && docker build -t ujusophy/payment-service .'
-                                sh "docker login -u ujusophy -p ${dockerhubpwd}"
-                                sh "docker push ujusophy/payment-service"
+                                withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
+                                    sh "docker login -u ujusophy -p ${dockerhubpwd}"
+                                    echo "Tagging and pushing Docker image"
+                                    sh "docker push ujusophy/payment-service"
+                                }
                                 echo "Image Published successfully"
                                 break
                             case 'main':
