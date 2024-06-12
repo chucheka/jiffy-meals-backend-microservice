@@ -16,16 +16,14 @@ pipeline {
                 script {
                     // Determine whether this is a develop, staging, or main build
                     switch (env.GIT_BRANCH) {
-                        case 'develop':
+                        case ~/.*develop.*/:
                             GLOBAL_ENVIRONMENT = 'develop'
                             break
-                        case 'staging':
+                        case ~/.*staging.*/:
                             GLOBAL_ENVIRONMENT = 'staging'
-                            DOCKERHUB_LOGINSERVER = env.DOCKERHUB_STAGING_LOGINSERVER
                             break
-                        case 'main':
+                        case ~/.*main.*/:
                             GLOBAL_ENVIRONMENT = 'main'
-                            DOCKERHUB_LOGINSERVER = env.DOCKERHUB_PROD_LOGINSERVER
                             break
                         default:
                             GLOBAL_ENVIRONMENT = 'NO_DEPLOYMENT'
@@ -46,15 +44,14 @@ pipeline {
                         switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
                                 sh 'cd payment-service && mvn clean package -DskipTests'
-                                sh 'cd payment-service'
                                 break
                             case 'staging':
                                 sh 'cd payment-service && mvn clean package'
-                                sh 'ls -l target'
+                                sh 'ls -l payment-service/target'
                                 break
-                            case 'production':
+                            case 'main':
                                 sh 'cd payment-service && mvn clean package'
-                                sh 'ls -l target'
+                                sh 'ls -l payment-service/target'
                                 break
                             default:
                                 echo 'No environment, nothing to build'
@@ -69,8 +66,7 @@ pipeline {
                 script {
                     withSonarQubeEnv('sonarsql') {
                         echo "Running SonarQube analysis"
-                        {
-                            sh 'cd payment-service'
+                        dir('payment-service') {
                             sh 'mvn sonar:sonar' // Ensure SonarQube analysis is properly configured
                         }
                     }
@@ -94,7 +90,7 @@ pipeline {
                                 sh "docker push ujusophy/payment-service"
                                 echo "Image Published successfully"
                                 break
-                            case 'production':
+                            case 'main':
                                 echo 'AWS ECR'
                                 // Will be published to AWS ECR.
                                 break
