@@ -83,6 +83,11 @@ pipeline {
                         echo "Hello, ${GLOBAL_ENVIRONMENT}."
                         switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
+                                echo "Building Docker image"
+                                sh 'cd payment-service && docker build -t ujusophy/payment-service .'
+                                sh "docker login -u ujusophy -p ${dockerhubpwd}"
+                                sh "docker push ujusophy/payment-service"
+                                echo "Image Published successfully"
                             case 'staging':
                                 echo "Building Docker image"
                                 sh 'cd payment-service && docker build -t ujusophy/payment-service .'
