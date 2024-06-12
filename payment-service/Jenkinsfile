@@ -64,13 +64,30 @@ pipeline {
                 }
             }
         }
+        stage('Publish image') {
+            steps {
+                script {
+                     withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
+                        echo "Building Docker image"
+                        sh 'cd payment-service && docker build -t ujusophy/payment-service .'
+                        sh "docker login -u ujusophy -p ${dockerhubpwd}"
+                        sh "docker push ujusophy/payment-service"
+
+                         echo "Image Published successfully"
+                    }
+                    
+                    
+                    
+                }
+            }
+        }
         stage('Code Analysis') {
             steps {
                 script {
                     withSonarQubeEnv('sonarsql') {
                         echo "Running SonarQube analysis"
                         dir('payment-service') {
-                            sh 'mvn install sonar:sonar' // Ensure SonarQube analysis is properly configured
+                            sh 'mvn sonar:sonar' // Ensure SonarQube analysis is properly configured
                         }
                     }
                 }
