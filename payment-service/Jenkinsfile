@@ -1,26 +1,76 @@
 pipeline {
     agent any
-    
     tools {
         maven 'maven' // Ensure 'maven' matches the Maven installation name in Jenkins
     }
-    
+    environment {
+        DEPLOYMENT_ENVIRONMENT = 'NO_DEPLOYMENT'
+        DOCKERHUB_LOGINSERVER = ''
+        APP_ENV = 'default'
+        GLOBAL_ENVIRONMENT = ''
+    }
     stages {
+        stage('Determine Environment') {
+            steps {
+                echo 'Determine Environment'
+                script {
+                    // Determine whether this is a develop, staging or main build
+                    switch (env.GIT_BRANCH) {
+                        case 'develop':
+                            GLOBAL_ENVIRONMENT = 'develop'
+                            DOCKERHUB_LOGINSERVER = env.DOCKERHUB_DEV_LOGINSERVER
+                            break
+                        case 'staging':
+                            GLOBAL_ENVIRONMENT = 'staging'
+                            DOCKERHUB_LOGINSERVER = env.DOCKERHUB_STAGING_LOGINSERVER
+                            break
+                        case 'main':
+                            GLOBAL_ENVIRONMENT = 'main'
+                            DOCKERHUB_LOGINSERVER = env.DOCKERHUB_PROD_LOGINSERVER
+                            break
+                        default:
+                            GLOBAL_ENVIRONMENT = 'NO_DEPLOYMENT'
+                            break
+                    }
+                }
+            }
+        }
         stage('Checkout') {
             steps {
                 echo "Checking out code"
-                git branch: 'develop', url: 'https://github.com/chucheka/jiffy-meals-backend-microservice.git'
+                git branch: GLOBAL_ENVIRONMENT, url: 'https://github.com/chucheka/jiffy-meals-backend-microservice.git'
                 script {
                     echo "Current working directory: ${pwd()}"
                 }
             }
         }
-        stage('Build and Test') {
+        stage('Build') {
             steps {
-                echo "Building and testing"
-                dir('payment-service') {
-                    sh 'mvn clean package' // Verify Maven is available and configured correctly
-                    sh 'ls -l target'
+                echo 'Building..' + GLOBAL_ENVIRONMENT
+                script {
+                    if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
+                        currentBuild.result = 'ABORTED'
+                        error('This is not develop, staging or main branch and should not be build')
+                    } else {
+                        echo "Hello, ${ENVIRONMENT}."
+                        switch (ENVIRONMENT) {
+                            case 'develop':
+                                sh 'cd payment-service && mvn clean package'
+                                sh 'ls -l target'
+                                break
+                            case 'staging':
+                                sh 'cd payment-service && mvn clean package'
+                                sh 'ls -l target'
+                                break
+                            case 'production':
+                                sh 'cd payment-service && mvn clean package'
+                                sh 'ls -l target'
+                                break
+                            default:
+                                echo 'No environment nothing to build'
+                                break
+                        }
+                    }
                 }
             }
         }
@@ -32,29 +82,6 @@ pipeline {
                         dir('payment-service') {
                             sh 'mvn install sonar:sonar' // Ensure SonarQube analysis is properly configured
                         }
-                    }
-                }
-            }
-        }
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "Building Docker image"
-                    dir('/var/lib/jenkins/workspace/micro/payment-service') {
-                      sh 'docker build -t ujusophy/payment-service .'
-                    }
-                }
-            }
-        }
-        stage('Push Image') {
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
-                        echo "Logging into Docker Hub"
-                        sh "docker login -u ujusophy -p ${dockerhubpwd}"
-                        
-                        echo "Tagging and pushing Docker image"
-                        sh "docker push ujusophy/payment-service"
                     }
                 }
             }
