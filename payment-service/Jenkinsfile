@@ -14,7 +14,7 @@ pipeline {
             steps {
                 echo 'Determine Environment'
                 script {
-                    // Determine whether this is a develop, staging or main build
+                    // Determine whether this is a develop, staging, or main build
                     switch (env.GIT_BRANCH) {
                         case 'develop':
                             GLOBAL_ENVIRONMENT = 'develop'
@@ -36,11 +36,11 @@ pipeline {
         }
         stage('Build') {
             steps {
-                echo 'Building..' + GLOBAL_ENVIRONMENT
+                echo 'Building.. ' + GLOBAL_ENVIRONMENT
                 script {
                     if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
                         currentBuild.result = 'ABORTED'
-                        error('This is not develop, staging or main branch and should not be build')
+                        error('This is not develop, staging, or main branch and should not be built')
                     } else {
                         echo "Hello, ${GLOBAL_ENVIRONMENT}."
                         switch (GLOBAL_ENVIRONMENT) {
@@ -57,27 +57,10 @@ pipeline {
                                 sh 'ls -l target'
                                 break
                             default:
-                                echo 'No environment nothing to build'
+                                echo 'No environment, nothing to build'
                                 break
                         }
                     }
-                }
-            }
-        }
-        stage('Publish image') {
-            steps {
-                script {
-                     withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
-                        echo "Building Docker image"
-                        sh 'cd payment-service && docker build -t ujusophy/payment-service .'
-                        sh "docker login -u ujusophy -p ${dockerhubpwd}"
-                        sh "docker push ujusophy/payment-service"
-
-                         echo "Image Published successfully"
-                    }
-                    
-                    
-                    
                 }
             }
         }
@@ -86,8 +69,38 @@ pipeline {
                 script {
                     withSonarQubeEnv('sonarsql') {
                         echo "Running SonarQube analysis"
-                        dir('payment-service') {
+                        {
+                            sh 'cd payment-service'
                             sh 'mvn sonar:sonar' // Ensure SonarQube analysis is properly configured
+                        }
+                    }
+                }
+            }
+        }
+        stage('Publish image') {
+            steps {
+                script {
+                    if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
+                        currentBuild.result = 'ABORTED'
+                        error('This is not develop, staging, or main image and should not be published')
+                    } else {
+                        echo "Hello, ${GLOBAL_ENVIRONMENT}."
+                        switch (GLOBAL_ENVIRONMENT) {
+                            case 'develop':
+                            case 'staging':
+                                echo "Building Docker image"
+                                sh 'cd payment-service && docker build -t ujusophy/payment-service .'
+                                sh "docker login -u ujusophy -p ${dockerhubpwd}"
+                                sh "docker push ujusophy/payment-service"
+                                echo "Image Published successfully"
+                                break
+                            case 'production':
+                                echo 'AWS ECR'
+                                // Will be published to AWS ECR.
+                                break
+                            default:
+                                echo 'No image to publish'
+                                break
                         }
                     }
                 }
@@ -95,6 +108,3 @@ pipeline {
         }
     }
 }
-
-
-docker push image
