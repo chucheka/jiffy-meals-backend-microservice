@@ -16,9 +16,13 @@ pipeline {
                 script {
                     // Determine whether this is a develop, staging or main build
                     switch (env.GIT_BRANCH) {
+
+                        script{
+                            echo env.GIT_BRANCH
+                        }
+
                         case 'develop':
                             GLOBAL_ENVIRONMENT = 'develop'
-                            DOCKERHUB_LOGINSERVER = env.DOCKERHUB_DEV_LOGINSERVER
                             break
                         case 'staging':
                             GLOBAL_ENVIRONMENT = 'staging'
@@ -32,15 +36,6 @@ pipeline {
                             GLOBAL_ENVIRONMENT = 'NO_DEPLOYMENT'
                             break
                     }
-                }
-            }
-        }
-        stage('Checkout') {
-            steps {
-                echo "Checking out code"
-                git branch: GLOBAL_ENVIRONMENT, url: 'https://github.com/chucheka/jiffy-meals-backend-microservice.git'
-                script {
-                    echo "Current working directory: ${pwd()}"
                 }
             }
         }
@@ -88,3 +83,6 @@ pipeline {
         }
     }
 }
+
+
+docker push image
