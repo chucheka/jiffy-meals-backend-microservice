@@ -16,11 +16,6 @@ pipeline {
                 script {
                     // Determine whether this is a develop, staging or main build
                     switch (env.GIT_BRANCH) {
-
-                        script{
-                            echo env.GIT_BRANCH
-                        }
-
                         case 'develop':
                             GLOBAL_ENVIRONMENT = 'develop'
                             break
