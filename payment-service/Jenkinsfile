@@ -42,8 +42,8 @@ pipeline {
                         currentBuild.result = 'ABORTED'
                         error('This is not develop, staging or main branch and should not be build')
                     } else {
-                        echo "Hello, ${ENVIRONMENT}."
-                        switch (ENVIRONMENT) {
+                        echo "Hello, ${GLOBAL_ENVIRONMENT}."
+                        switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
                                 sh 'cd payment-service && mvn clean package'
                                 sh 'ls -l target'
