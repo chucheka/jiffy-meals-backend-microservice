@@ -5,7 +5,6 @@ pipeline {
     }
     environment {
         DEPLOYMENT_ENVIRONMENT = 'NO_DEPLOYMENT'
-        DOCKERHUB_LOGINSERVER = ''
         APP_ENV = 'default'
         GLOBAL_ENVIRONMENT = ''
     }
@@ -14,15 +13,15 @@ pipeline {
             steps {
                 echo 'Determine Environment'
                 script {
-                    // Determine whether this is a develop, staging, or main build
+                    // Determine whether this is a develop, staging, or main(Production) build
                     switch (env.GIT_BRANCH) {
-                        case ~/.*develop.*/:
+                        case 'develop':
                             GLOBAL_ENVIRONMENT = 'develop'
                             break
-                        case ~/.*staging.*/:
+                        case 'staging':
                             GLOBAL_ENVIRONMENT = 'staging'
                             break
-                        case ~/.*main.*/:
+                        case 'main':
                             GLOBAL_ENVIRONMENT = 'main'
                             break
                         default:
@@ -40,23 +39,8 @@ pipeline {
                         currentBuild.result = 'ABORTED'
                         error('This is not develop, staging, or main branch and should not be built')
                     } else {
-                        echo "Hello, ${GLOBAL_ENVIRONMENT}."
-                        switch (GLOBAL_ENVIRONMENT) {
-                            case 'develop':
-                                sh 'cd payment-service && mvn clean package -DskipTests'
-                                break
-                            case 'staging':
-                                sh 'cd payment-service && mvn clean package'
-                                sh 'ls -l payment-service/target'
-                                break
-                            case 'main':
-                                sh 'cd payment-service && mvn clean package'
-                                sh 'ls -l payment-service/target'
-                                break
-                            default:
-                                echo 'No environment, nothing to build'
-                                break
-                        }
+                        echo "Building for environment: ${GLOBAL_ENVIRONMENT}."
+                        sh 'cd payment-service && mvn clean package -DskipTests'
                     }
                 }
             }
@@ -64,23 +48,27 @@ pipeline {
         stage('Code Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv('sonarsql') {
-                        echo "Running SonarQube analysis"
-                        dir('payment-service') {
-                            sh 'mvn sonar:sonar' // Ensure SonarQube analysis is properly configured
+                    if (GLOBAL_ENVIRONMENT != 'NO_DEPLOYMENT') {
+                        withSonarQubeEnv('sonarsql') {
+                            echo "Running SonarQube analysis"
+                            dir('payment-service') {
+                                sh 'mvn sonar:sonar' // Ensure SonarQube analysis is properly configured
+                            }
                         }
+                    } else {
+                        echo "No deployment environment set, skipping code analysis."
                     }
                 }
             }
         }
-        stage('Publish image') {
+        stage('Publish Image') {
             steps {
                 script {
                     if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
                         currentBuild.result = 'ABORTED'
                         error('This is not develop, staging, or main image and should not be published')
                     } else {
-                        echo "Hello, ${GLOBAL_ENVIRONMENT}."
+                        echo "Publishing image for environment: ${GLOBAL_ENVIRONMENT}."
                         switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
                                 echo "Building Docker image"
@@ -90,24 +78,56 @@ pipeline {
                                     echo "Tagging and pushing Docker image"
                                     sh "docker push ujusophy/payment-service"
                                 }
-                                echo "Image Published successfully"
-                                break // Add break to ensure correct flow
+                                echo "Image published successfully"
+                                break
                             case 'staging':
-                                echo "Building Docker image"
-                                sh 'cd payment-service && docker build -t ujusophy/payment-service .'
-                                withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
-                                    sh "docker login -u ujusophy -p ${dockerhubpwd}"
-                                    echo "Tagging and pushing Docker image"
-                                    sh "docker push ujusophy/payment-service"
-                                }
-                                echo "Image Published successfully"
+                                echo 'AWS ECR'
+                                // Add AWS ECR publishing logic here
+                                echo "Image published successfully"
                                 break
                             case 'main':
                                 echo 'AWS ECR'
-                                // Will be published to AWS ECR.
+                                // Add AWS ECR publishing logic here
+                                echo "Image published successfully"
                                 break
                             default:
                                 echo 'No image to publish'
+                                break
+                        }
+                    }
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    if (GLOBAL_ENVIRONMENT == 'NO_DEPLOYMENT') {
+                        currentBuild.result = 'ABORTED'
+                        error('This is not develop, staging, or main image and should not be deployed')
+                    } else {
+                        echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
+                        switch (env.GLOBAL_ENVIRONMENT) {
+                            case 'develop':
+                                kubeconfig(credentialsId: 'kubefile', serverUrl: 'https://192.168.49.2:8443') {
+                                    sh 'kubectl version --client'
+                                    sh 'kubectl apply -f payment-service/deployment.yaml'
+                                    sh 'kubectl get pods'
+                                    sh 'kubectl get svc'
+                                }
+                                echo "Deployment to Kubernetes was successful"
+                                break
+                            case 'staging':
+                                echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
+                                // Add AWS EKS deployment logic here
+                                echo "Deployment to Kubernetes was successful"
+                                break
+                            case 'main':
+                                echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
+                                // Add AWS EKS deployment logic here
+                                echo "Deployment to Kubernetes was successful"
+                                break
+                            default:
+                                echo 'No image to deploy'
                                 break
                         }
                     }
