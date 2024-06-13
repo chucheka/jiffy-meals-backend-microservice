@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eureka-server-deployment
+  name: eureka-server
   labels:
     app: eureka-server
 spec:
@@ -15,7 +15,7 @@ spec:
         app: eureka-server
     spec:
       containers:
-      - name: eureka-server-container
+      - name: eureka-server
         image: ujusophy/config-server:latest
         ports:
         - containerPort: 8761
@@ -23,7 +23,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: eureka-service
+  name: eureka-server
+  namespace: jiffymeals
 spec:
   selector:
     app: eureka-server
@@ -31,5 +32,5 @@ spec:
     - protocol: TCP
       port: 8761
       targetPort: 8761
-      nodePort: 30004
+      nodePort: 30002
   type: NodePort
