@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: eureka-server
+  namespace: jiffymeals
   labels:
     app: eureka-server
 spec:
