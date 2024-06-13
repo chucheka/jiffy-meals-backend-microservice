@@ -72,7 +72,7 @@ pipeline {
                         switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
                                 echo "Building Docker image"
-                                sh 'cd eureka-server && docker build -t ujusophy/config-server .'
+                                sh 'cd eureka-server && docker build -t ujusophy/eureka-server .'
                                 withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
                                     sh "docker login -u ujusophy -p ${dockerhubpwd}"
                                     echo "Tagging and pushing Docker image"
