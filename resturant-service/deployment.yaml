@@ -6,7 +6,6 @@ metadata:
   labels:
     app: resturant-service
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: resturant-service
