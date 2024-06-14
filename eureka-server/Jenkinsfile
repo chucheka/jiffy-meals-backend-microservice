@@ -112,7 +112,7 @@ pipeline {
                                     sh 'kubectl version --client'
                                     sh 'kubectl apply -f eureka-server/deployment.yaml'
                                     sh 'kubectl get pods --namespace jiffymeals'
-                                    sh 'kubectl get svc'
+                                    sh 'kubectl get svc --namespace jiffymeals'
                                 }
                                 echo "Deployment to Kubernetes was successful"
                                 break
