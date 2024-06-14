@@ -111,8 +111,8 @@ pipeline {
                                 kubeconfig(credentialsId: 'kubefile', serverUrl: 'https://192.168.49.2:8443') {
                                     sh 'kubectl version --client'
                                     sh 'kubectl apply -f identity-service/deployment.yaml'
-                                    sh 'kubectl get pods'
-                                    sh 'kubectl get svc'
+                                    sh 'kubectl get pods --namespace jiffymeals'
+                                    sh 'kubectl get svc --namespace jiffymeals'
                                 }
                                 echo "Deployment to Kubernetes was successful"
                                 break
