@@ -1,5 +1,7 @@
 FROM openjdk:21-jdk
-WORKDIR /jiffy-meals-backend-microservice-app
-COPY jiffy-meals-backend-microservice /jiffy-meals-backend-microservice-app
-EXPOSE 8080
-CMD ["java", "-jar", "micro/order-service/target/order-service-0.0.1-SNAPSHOT.jar"]
+MAINTAINER chikeucheka@gmail.com,sophyjelly718@gmail.com
+ARG JAR_FILE=target/order-service.jar
+WORKDIR /app
+COPY ${JAR_FILE} order-service.jar
+EXPOSE 8082
+ENTRYPOINT ["java","-jar","order-service.jar"]
