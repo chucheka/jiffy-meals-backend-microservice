@@ -106,7 +106,7 @@ pipeline {
                         error('This is not develop, staging, or main image and should not be deployed')
                     } else {
                         echo "Deploying to Kubernetes: ${GLOBAL_ENVIRONMENT}"
-                        switch (env.GLOBAL_ENVIRONMENT) {
+                        switch (GLOBAL_ENVIRONMENT) {
                             case 'develop':
                                 kubeconfig(credentialsId: 'kubefile', serverUrl: 'https://192.168.49.2:8443') {
                                     sh 'kubectl version --client'
