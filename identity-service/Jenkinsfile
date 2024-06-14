@@ -76,7 +76,7 @@ pipeline {
                                 withCredentials([string(credentialsId: 'dockerhub-cred', variable: 'dockerhubpwd')]) {
                                     sh "docker login -u ujusophy -p ${dockerhubpwd}"
                                     echo "Tagging and pushing Docker image"
-                                    sh "docker push ujusophy/identity-servicer"
+                                    sh "docker push ujusophy/identity-service"
                                 }
                                 echo "Image published successfully"
                                 break
