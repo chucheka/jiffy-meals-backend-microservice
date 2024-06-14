@@ -6,6 +6,7 @@ metadata:
   labels:
     app: payment-service
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: payment-service
@@ -13,7 +14,7 @@ spec:
     metadata:
       labels:
         app: payment-service
-    spec:
+    spec: 
       containers:
       - name: payment-service
         image: ujusophy/payment-service:latest
@@ -32,5 +33,5 @@ spec:
     - protocol: TCP
       port: 8083
       targetPort: 8083
-      nodePort: 30006
+      nodePort: 30000
   type: NodePort
