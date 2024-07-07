@@ -11,3 +11,15 @@ app:
   secret: '{cipher}2ba87406958e04d7fe1dba271fdaeef7dedefd1957360ff042bbab8616cf2c21'
   base:
     url: http://localhost:8080/
+logging:
+  level:
+    org.springframework.web: WARN
+    com.chucheka: DEBUG
+  pattern:
+    level:management: %5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0

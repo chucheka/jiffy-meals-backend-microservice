@@ -1,11 +1,14 @@
 package com.chucheka.payment_service.services;
 
+import com.chucheka.payment_service.config.UserContextHolder;
 import com.chucheka.payment_service.dto.*;
 import com.chucheka.payment_service.entities.Wallet;
 import com.chucheka.payment_service.enums.PaymentType;
 import com.chucheka.payment_service.repositories.WalletRepository;
 import com.chucheka.payment_service.utils.AppUtils;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WalletService {
@@ -38,7 +42,10 @@ public class WalletService {
         return new GenericResponse<>(true, "Wallet with wallet id " + wallet.getWalletId() + " created", null);
     }
 
+
     public GenericResponse<?> fundWallet(CreditDebitWalletDto creditDebitWalletDto) {
+
+        log.debug("WalletService Correlation Id: {}", UserContextHolder.getContext().getCorrelationId());
 
         BigDecimal amount = BigDecimal.valueOf(creditDebitWalletDto.amount());
 
@@ -60,12 +67,12 @@ public class WalletService {
 
         ResponseEntity<AccountDebitCreditResponse> response = paymentGateway.makePayment(debitCreditRequest);
 
-        if (response==null)
+        if (response == null)
             return new GenericResponse<>(false, "issuer inoperative", null);
 
         AccountDebitCreditResponse res = response.getBody();
         if (!res.code().equals("00"))
-            return new GenericResponse<>(false, "issuer inoperative", null);
+            return new GenericResponse<>(false, res.message(), res);
 
         BigDecimal newBalance = wallet.getBalance().add(amount);
 
@@ -77,7 +84,8 @@ public class WalletService {
 
     }
 
-    public GenericResponse creditWallet(CreditDebitWalletDto creditDebitWalletDto) {
+    @CircuitBreaker(name = "payment_service", fallbackMethod = "buildFallbackPaymentResponse")
+    public GenericResponse<?> debitWallet(CreditDebitWalletDto creditDebitWalletDto) {
 
         BigDecimal amount = BigDecimal.valueOf(creditDebitWalletDto.amount());
 
@@ -85,6 +93,9 @@ public class WalletService {
 
         if (!Objects.nonNull(wallet))
             return new GenericResponse<>(false, "wallet not found", null);
+
+        if (wallet.getBalance().compareTo(amount) < 0)
+            return new GenericResponse<>(false, "insufficient balance", null);
 
         AccountDebitCreditRequest debitCreditRequest = AccountDebitCreditRequest.builder()
 
@@ -99,7 +110,7 @@ public class WalletService {
 
         ResponseEntity<AccountDebitCreditResponse> response = paymentGateway.makePayment(debitCreditRequest);
 
-        if (response==null)
+        if (response == null)
             return new GenericResponse<>(false, "issuer inoperative", null);
 
         AccountDebitCreditResponse res = response.getBody();

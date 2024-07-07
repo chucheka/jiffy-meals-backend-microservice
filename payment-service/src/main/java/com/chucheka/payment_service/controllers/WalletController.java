@@ -23,12 +23,12 @@ public class WalletController {
     }
 
     @PostMapping("/fund-wallet")
-    public GenericResponse fundWallet(@RequestBody @Valid CreditDebitWalletDto creditDebitWalletDto){
+    public GenericResponse<?> fundWallet(@RequestBody @Valid CreditDebitWalletDto creditDebitWalletDto){
         return walletService.fundWallet(creditDebitWalletDto);
     }
 
-    @PostMapping("/credit-wallet")
-    public GenericResponse creditWallet(@RequestBody @Valid CreditDebitWalletDto creditDebitWalletDto){
-        return walletService.creditWallet(creditDebitWalletDto);
+    @PostMapping("/debit-wallet")
+    public GenericResponse<?> debitWallet(@RequestBody @Valid CreditDebitWalletDto creditDebitWalletDto){
+        return walletService.debitWallet(creditDebitWalletDto);
     }
 }

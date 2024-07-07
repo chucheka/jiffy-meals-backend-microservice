@@ -1,10 +1,12 @@
 package com.chucheka.orderservice.exceptions;
 
 import com.chucheka.orderservice.dto.GenericResponse;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 
@@ -51,6 +53,17 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
     @ExceptionHandler({ServerErrorException.class })
     public ResponseEntity<Object> handleAppException(Exception ex) {
 
+        GenericResponse<?> errorResponse = GenericResponse.builder()
+                .success(false)
+                .message(ex.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler({CallNotPermittedException.class})
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ResponseEntity<?> handleCallNotPermittedException(CallNotPermittedException ex) {
         GenericResponse<?> errorResponse = GenericResponse.builder()
                 .success(false)
                 .message(ex.getMessage())
